@@ -1,0 +1,11 @@
+.metals/
+.scala-build/
+.vscode/
+project/
+target/
+simWorkspace/
+tmp/
+*.v
+*.asc
+*.bin
+*.json
