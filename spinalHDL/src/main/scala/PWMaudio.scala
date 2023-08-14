@@ -5,36 +5,28 @@ import spinal.lib.fsm._
 
 class PWMaudio extends Component{
     val io = new Bundle{
-        val out_pwm_low = out Bool()
-        val out_pwm_high = out Bool()
+        val pwm_low = out Bool()
+        val pwm_high = out Bool()
     }
 
-    val pwmdriver_low = new PWMdriver(5)
-    val pwmdriver_high = new PWMdriver(5)
-    
-    // **** Square Signal with 1024 resolution steps / freq 220 Hz (53 ticks/change)
+    val pwm_ctrl = new PWMctrl(5)
 
-    val counter1 = Counter(53)
-    val counter2 = Counter(1024)
-    val sqr_duty_cycle = UInt(10 bits)
+    io.pwm_low  := pwm_ctrl.io.pwm_low
+    io.pwm_high := pwm_ctrl.io.pwm_high
 
-    pwmdriver_low.io.dutyCycle := sqr_duty_cycle(0 to 4)
-    pwmdriver_high.io.dutyCycle := sqr_duty_cycle(5 to 9)
+    val sweep_counter = Counter (6000)
+    val level_sweep = Reg(U(0, 10 bits))
 
-    io.out_pwm_low := pwmdriver_low.io.pwmOutput
-    io.out_pwm_high := pwmdriver_high.io.pwmOutput
+    pwm_ctrl.io.freq        := 106
+    pwm_ctrl.io.level       := level_sweep
+    pwm_ctrl.io.waveform    := True
 
-    counter1.increment()
-    when(counter1.willOverflow) {
-        counter2.increment()
+    sweep_counter.increment()
+    when(sweep_counter.willOverflow) {
+        level_sweep := level_sweep + 1
     }
 
-    when (counter2.value < 512) {
-        sqr_duty_cycle := 0
-    }.otherwise{
-        sqr_duty_cycle := 1023
-    }
-    
+
     // **** Sawtooth Signal with 1024 resolution steps / freq 220 Hz (53 ticks/change)
 
     // val counter1 = Counter(53) 
