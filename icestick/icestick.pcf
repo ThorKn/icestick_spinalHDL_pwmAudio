@@ -58,8 +58,8 @@ set_io --warn-no-port SD 107
 #    | 87    78 | <
 #     ----------
 #
-set_io --warn-no-port io_out1 78
-set_io --warn-no-port PMOD2 79
+set_io --warn-no-port io_out_pwm_low 78
+set_io --warn-no-port io_out_pwm_high 79
 set_io --warn-no-port PMOD3 80
 set_io --warn-no-port PMOD4 81
 set_io --warn-no-port PMOD7 87

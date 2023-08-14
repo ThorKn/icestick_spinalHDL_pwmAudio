@@ -8,10 +8,7 @@ class PWMdriver(width: Int) extends Component {
   }
 
   val counter = Counter(width bits) 
-
-  counter.increment()
-
-  // Generate PWM output based on duty cycle and frequency
   io.pwmOutput := counter.value < io.dutyCycle
+  counter.increment()
 
 }
