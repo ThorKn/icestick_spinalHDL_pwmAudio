@@ -14,10 +14,10 @@ class PWMaudio extends Component{
     io.pwm_low  := pwm_ctrl.io.pwm_low
     io.pwm_high := pwm_ctrl.io.pwm_high
 
-    val sweep_counter = Counter (6000)
+    val sweep_counter = Counter (3000)
     val level_sweep = Reg(U(0, 10 bits))
 
-    pwm_ctrl.io.freq        := 106
+    pwm_ctrl.io.freq        := 53
     pwm_ctrl.io.level       := level_sweep
     pwm_ctrl.io.waveform    := True
 
@@ -51,19 +51,19 @@ object PWMaudioMain{
             defaultClockDomainFrequency = FixedFrequency(12 MHz)
         ).generate(new PWMaudio)
 
-        val spinalConfig = SpinalConfig(defaultClockDomainFrequency = FixedFrequency(12 MHz))
+        // val spinalConfig = SpinalConfig(defaultClockDomainFrequency = FixedFrequency(12 MHz))
 
-        SimConfig
-            .withConfig(spinalConfig)
-            .withWave
-            .compile(new PWMaudio)
-            .doSim{ pwmaudio =>
-                pwmaudio.clockDomain.forkStimulus(2)
-                var idx = 0
-                while(idx < 220000){
-                    pwmaudio.clockDomain.waitSampling()
-                    idx += 1
-                }
-            }
+        // SimConfig
+        //     .withConfig(spinalConfig)
+        //     .withWave
+        //     .compile(new PWMaudio)
+        //     .doSim{ pwmaudio =>
+        //         pwmaudio.clockDomain.forkStimulus(2)
+        //         var idx = 0
+        //         while(idx < 220000){
+        //             pwmaudio.clockDomain.waitSampling()
+        //             idx += 1
+        //         }
+        //     }
     }
 }
