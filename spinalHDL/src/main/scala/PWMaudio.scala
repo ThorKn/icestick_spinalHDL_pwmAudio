@@ -14,7 +14,7 @@ class PWMaudio extends Component{
     io.pwm_low  := pwm_ctrl.io.pwm_low
     io.pwm_high := pwm_ctrl.io.pwm_high
 
-    val sweep_counter = Counter (3000)
+    val sweep_counter = Counter (6000)
     val level_sweep = Reg(U(0, 10 bits))
 
     pwm_ctrl.io.freq        := 53
@@ -27,21 +27,7 @@ class PWMaudio extends Component{
     }
 
 
-    // **** Sawtooth Signal with 1024 resolution steps / freq 220 Hz (53 ticks/change)
 
-    // val counter1 = Counter(53) 
-    // val counter2 = Counter(1024)
-
-    // pwmdriver_low.io.dutyCycle := counter2.value(0 to 4)
-    // pwmdriver_high.io.dutyCycle := counter2.value(5 to 9)
-
-    // io.out_pwm_low := pwmdriver_low.io.pwmOutput
-    // io.out_pwm_high := pwmdriver_high.io.pwmOutput
-
-    // counter1.increment()
-    // when(counter1.willOverflow) {
-    //     counter2.increment()
-    // } 
 }
 
 object PWMaudioMain{
