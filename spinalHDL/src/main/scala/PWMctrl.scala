@@ -29,9 +29,14 @@ class PWMctrl(width: Int) extends Component {
         wave_counter.increment()
     }
 
+    // **** Square Wave Signal with 1024 resolution steps
     when(wave_counter.value < 512) {
         duty_cycle := 0
     }.otherwise {
         duty_cycle := io.level
     }
+
+    // **** Sawtooth Signal with 1024 resolution steps / freq 220 Hz (53 ticks/change)
+    // LEVEL is missing. How to implement? 
+    // duty_cycle := wave_counter.value
 }
