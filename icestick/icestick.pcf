@@ -58,14 +58,14 @@ set_io --warn-no-port SD 107
 #    | 87    78 | <
 #     ----------
 #
-set_io --warn-no-port io_pwm_low 78
-set_io --warn-no-port io_pwm_high 79
-set_io --warn-no-port PMOD3 80
-set_io --warn-no-port PMOD4 81
-set_io --warn-no-port PMOD7 87
-set_io --warn-no-port PMOD8 88
-set_io --warn-no-port PMOD9 90
-set_io --warn-no-port reset 91
+set_io --warn-no-port io_pwm_1 78
+set_io --warn-no-port -pullup yes io_loop 79
+set_io --warn-no-port -pullup yes io_trigger 80
+set_io --warn-no-port -pullup yes io_adsr_switch 81
+set_io --warn-no-port -pullup yes io_adsr_choice[0] 87
+set_io --warn-no-port -pullup yes io_adsr_choice[1] 88
+set_io --warn-no-port -pullup yes io_adsr_choice[2] 90
+set_io --warn-no-port  reset 91
 
 # ------------------------ EXPANSION I/O ------------------------------------
 #
@@ -101,24 +101,24 @@ set_io --warn-no-port reset 91
 #         -------------------------------------------------
 #
 # -- Top Row
-set_io --warn-no-port TR3 112
-set_io --warn-no-port TR4 113
-set_io --warn-no-port TR5 114
-set_io --warn-no-port TR6 115
-set_io --warn-no-port TR7 116
-set_io --warn-no-port TR8 117
-set_io --warn-no-port TR9 118
-set_io --warn-no-port TR10 119
+set_io --warn-no-port -pullup yes io_frequency[0] 112
+set_io --warn-no-port -pullup yes io_frequency[1] 113
+set_io --warn-no-port -pullup yes io_frequency[2] 114
+set_io --warn-no-port -pullup yes io_frequency[3] 115
+set_io --warn-no-port -pullup yes io_frequency[4] 116
+set_io --warn-no-port -pullup yes io_frequency[5] 117
+set_io --warn-no-port -pullup yes io_frequency[6] 118
+set_io --warn-no-port -pullup yes io_frequency[7] 119
 #
 # -- Bottom Row
-set_io --warn-no-port BR3 62
-set_io --warn-no-port BR4 61
-set_io --warn-no-port BR5 60
-set_io --warn-no-port BR6 56
-set_io --warn-no-port BR7 48
-set_io --warn-no-port BR8 47
-set_io --warn-no-port BR9 45
-set_io --warn-no-port BR10 44
+set_io --warn-no-port -pullup yes io_note_length[0] 62
+set_io --warn-no-port -pullup yes io_note_length[1] 61
+set_io --warn-no-port -pullup yes io_note_length[2] 60
+set_io --warn-no-port -pullup yes io_pwm_2 56
+set_io --warn-no-port -pullup yes io_frequency[8] 48
+set_io --warn-no-port -pullup yes io_frequency[9] 47
+set_io --warn-no-port -pullup yes io_frequency[10] 45
+set_io --warn-no-port -pullup yes io_frequency[11] 44
 
 # -------------------------- SYSTEM CLOCK ------------------------------------
 set_io --warn-no-port clk 21

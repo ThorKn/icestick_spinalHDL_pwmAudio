@@ -3,40 +3,38 @@ import spinal.lib._
 
 class PWMctrl(width: Int) extends Component {
     val io = new Bundle {
-        val freq     = in  UInt (8 bits)    // Frequency counter (divider)
-        val level    = in  UInt (10 bits)   // Amplitude level
-        val waveform = in  Bool()           // Square or Sawtooth waves
-        val pwm_low  = out Bool()           // PWM lower bits output pin
-        val pwm_high = out Bool()           // PWM higher bits output pin
+        val freq        = in  UInt (12 bits)    // Frequency counter (divider)
+        val level       = in  UInt (8 bits)     // Amplitude level
+        val pwm_1       = out Bool()            // PWM 1 output pin (square)
+        val pwm_2       = out Bool()            // PWM 2 output pin (ramp)
     }
 
-    val pwmdriver_low  = new PWMdriver(width)
-    val pwmdriver_high = new PWMdriver(width)
+    val freq_counter = Counter (12 bits)
+    val pwm_steps_counter = Counter (width bits)
 
-    io.pwm_low  := pwmdriver_low.io.pwm
-    io.pwm_high := pwmdriver_high.io.pwm
+    // PWM 1 is for square waves
+    val pwmdriver_1 = new PWMdriver(width)
+    val duty_cycle_1   = UInt (width bits)
+    io.pwm_1  := pwmdriver_1.io.pwm
+    pwmdriver_1.io.dutyCycle := duty_cycle_1
 
-    val duty_cycle   = UInt ((width*2) bits)
-    val freq_counter = Counter (8 bits)
-    val wave_counter = Counter ((width*2) bits)
-
-    pwmdriver_low.io.dutyCycle  := duty_cycle(0 to (width-1))
-    pwmdriver_high.io.dutyCycle := duty_cycle(width to (width*2-1))
-
+    // Count to io.freq before the next pwm_step.
     freq_counter.increment()
     when(freq_counter.value === io.freq){
         freq_counter.clear()
-        wave_counter.increment()
+        pwm_steps_counter.increment()
     }
 
-    // **** Square Wave Signal with 1024 resolution steps
-    when(wave_counter.value < 512) {
-        duty_cycle := 0
+    // **** Square Wave Signal on PWM 1
+    when(pwm_steps_counter.value < 127) {
+        duty_cycle_1 := 0
     }.otherwise {
-        duty_cycle := io.level
+        duty_cycle_1 := io.level
     }
 
-    // **** Sawtooth Signal with 1024 resolution steps / freq 220 Hz (53 ticks/change)
-    // LEVEL is missing. How to implement? 
-    // duty_cycle := wave_counter.value
+    // PWM 2 is for ramp waves
+    val pwmdriver_2 = new PWMdriver(width)
+    io.pwm_2  := pwmdriver_2.io.pwm
+    pwmdriver_2.io.dutyCycle := pwm_steps_counter
+
 }
