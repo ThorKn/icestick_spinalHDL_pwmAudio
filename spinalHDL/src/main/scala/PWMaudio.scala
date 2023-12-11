@@ -7,49 +7,109 @@ import java.util.Arrays
 
 class PWMaudio extends Component{
     val io = new Bundle{
-        val pwm_low = out Bool()
-        val pwm_high = out Bool()
+        val pwm_1 = out Bool()
+        val pwm_2 = out Bool()
+        val frequency = in Bits(12 bits)
+        val note_length = in Bits(3 bits)
+        val adsr_switch = in Bool()
+        val loop = in Bool()
+        val trigger = in Bool()
+        val adsr_choice = in Bits(3 bits)
     }
 
-    var list = List(200 , 400, 425000, 600)
-    var adsr_table = Array[Int](list: _*)
+    val adsr1 = UInt(24 bit)
+    val adsr2 = UInt(24 bit)
+    val adsr3 = UInt(24 bit)
+    val adsr4 = UInt(24 bit)
 
-    val pwm_ctrl = new PWMctrl(5)
-    val note_length = U(4, 4 bits)
-    // val rom_adsr = Mem(UInt(20 bits), initialContent = list)
+    switch(U(io.adsr_choice)){
+        is(0) {
+            adsr1 := 50
+            adsr2 := 100
+            adsr3 := 500
+            adsr4 := 100
+        }
+        is(1) {
+            adsr1 := 50
+            adsr2 := 500
+            adsr3 := 500
+            adsr4 := 100
+        }
+        is(2) {
+            adsr1 := 10
+            adsr2 := 1500
+            adsr3 := 1000
+            adsr4 := 400
+        }
+        is(3) {
+            adsr1 := 10
+            adsr2 := 2000
+            adsr3 := 1500
+            adsr4 := 400
+        }
+        is(4) {
+            adsr1 := 1000
+            adsr2 := 100
+            adsr3 := 2000
+            adsr4 := 400
+        }
+        is(5) {
+            adsr1 := 1000
+            adsr2 := 2000
+            adsr3 := 2000
+            adsr4 := 1000
+        }
+        is(6) {
+            adsr1 := 5000
+            adsr2 := 1000
+            adsr3 := 500
+            adsr4 := 400
+        }
+        is(7) {
+            adsr1 := 5000
+            adsr2 := 5000
+            adsr3 := 1000
+            adsr4 := 10000
+        }
+    }
 
-    io.pwm_low  := pwm_ctrl.io.pwm_low
-    io.pwm_high := pwm_ctrl.io.pwm_high
+    val pwm_ctrl = new PWMctrl(8)
+    val note_length = U(io.note_length)
 
-    // val sweep_counter = Counter (11718)
-    // val level_sweep = Reg(U(0, 10 bits))
+    io.pwm_1 := pwm_ctrl.io.pwm_1
+    io.pwm_2 := pwm_ctrl.io.pwm_2
 
-    pwm_ctrl.io.freq        := 26
-    // pwm_ctrl.io.level       := level_sweep
-    pwm_ctrl.io.waveform    := True
-
-    // sweep_counter.increment()
-    // when(sweep_counter.willOverflow) {
-    //     level_sweep := level_sweep - 1
-    // }
+    pwm_ctrl.io.freq := U(io.frequency)
 
     val fsm_adsr = new StateMachine{
         val counter = Reg(UInt(24 bits)) init (0)
-        val level_adsr = Reg(UInt(10 bits)) init (0)
-        pwm_ctrl.io.level := level_adsr
+        val level_adsr = Reg(UInt(8 bits)) init (0)
+        when(io.adsr_switch) {
+            pwm_ctrl.io.level := level_adsr
+        } otherwise {
+            pwm_ctrl.io.level := 255
+        }
 
         val stateEntry : State = new State with EntryPoint{
-            whenIsActive (goto(stateAttack))
+            whenIsActive {
+                when(io.loop) {
+                    goto(stateAttack)
+                } otherwise {
+                    when(!io.trigger) {
+                        goto(stateAttack)
+                    }
+                }
+            }
         }
         val stateAttack : State = new State{
             onEntry(counter := 0)
             whenIsActive {
                 counter := counter + 1
-                when(counter === adsr_table(0) * note_length){
+                when(counter >= adsr1 * (note_length * 2 )){
                     level_adsr := level_adsr + 1
                     counter := 0
                 }
-                when(level_adsr === 1000) {
+                when(level_adsr === 255) {
                     goto(stateDelay)
                 }
             }
@@ -58,11 +118,11 @@ class PWMaudio extends Component{
             onEntry(counter := 0)
             whenIsActive {
                 counter := counter + 1
-                when(counter === adsr_table(1) * note_length){
+                when(counter >= adsr2 * note_length * 2){
                     level_adsr := level_adsr - 1
                     counter := 0
                 }
-                when(level_adsr === 500) {
+                when(level_adsr === 127) {
                     goto(stateSustain)
                 }
             }
@@ -71,8 +131,8 @@ class PWMaudio extends Component{
             onEntry(counter := 0)
             whenIsActive {
                 counter := counter + 1
-                level_adsr := 500
-                when(counter === adsr_table(2) * note_length){
+                level_adsr := 127
+                when(counter >= adsr3 * note_length * 2){
                     goto(stateRelease)
                 }
             }
@@ -81,7 +141,7 @@ class PWMaudio extends Component{
             onEntry(counter := 0)
             whenIsActive {
                 counter := counter + 1
-                when(counter === adsr_table(3) * note_length){
+                when(counter >= adsr4 * note_length * 2){
                     level_adsr := level_adsr - 1
                     counter := 0
                 }
@@ -102,17 +162,18 @@ object PWMaudioMain{
 
         val spinalConfig = SpinalConfig(defaultClockDomainFrequency = FixedFrequency(12 MHz))
 
-        SimConfig
-            .withConfig(spinalConfig)
-            .withWave
-            .compile(new PWMaudio)
-            .doSim{ pwmaudio =>
-                pwmaudio.clockDomain.forkStimulus(2)
-                var idx = 0
-                while(idx < 220000){
-                    pwmaudio.clockDomain.waitSampling()
-                    idx += 1
-                }
-            }
+        // SimConfig
+        //     .withConfig(spinalConfig)
+        //     .withWave
+        //     .compile(new PWMaudio)
+        //     .doSim{ pwmaudio =>
+        //         pwmaudio.clockDomain.forkStimulus(2)
+        //         var idx = 0
+        //         // pwmaudio.io.frequency = 255
+        //         while(idx < 220000){
+        //             pwmaudio.clockDomain.waitSampling()
+        //             idx += 1
+        //         }
+        //     }
     }
 }
